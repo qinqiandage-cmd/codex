@@ -33,7 +33,7 @@ case "${TARGET}" in
 esac
 
 libcap_pkgconfig_dir="/tmp/codex-empty-pkgconfig"
-mkdir -p ""
+mkdir -p "${libcap_pkgconfig_dir}"
 
 sysroot=""
 if command -v zig >/dev/null; then
