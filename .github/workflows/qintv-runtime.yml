@@ -11,7 +11,25 @@ env:
   CODEX_VERSION: "0.164.0"
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.99.1
+      - name: Install host OpenSSL headers
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
+      - name: Run credential-safety tests
+        shell: bash
+        working-directory: codex-rs
+        run: |
+          set -euo pipefail
+          cargo test --locked -p codex-core --lib turn_metadata_extracts_qintv_gateway_key_without_serializing_it
+          cargo test --locked -p codex-core --lib debug_redacts_responses_api_client_metadata_values
+          cargo test --locked -p codex-core --lib turn_scoped_responses_auth_replaces_the_provider_placeholder
+
   build:
+    needs: test
     strategy:
       fail-fast: false
       matrix:
@@ -51,14 +69,6 @@ jobs:
         uses: ./.github/actions/setup-rusty-v8
         with:
           target: ${{ matrix.target }}
-      - name: Run credential-safety tests
-        shell: bash
-        working-directory: codex-rs
-        run: |
-          set -euo pipefail
-          cargo test --locked -p codex-core --lib turn_metadata_extracts_qintv_gateway_key_without_serializing_it
-          cargo test --locked -p codex-core --lib debug_redacts_responses_api_client_metadata_values
-          cargo test --locked -p codex-core --lib turn_scoped_responses_auth_replaces_the_provider_placeholder
       - name: Build codex
         shell: bash
         working-directory: codex-rs
