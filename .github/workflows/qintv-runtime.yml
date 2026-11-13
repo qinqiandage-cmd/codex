@@ -53,6 +53,7 @@ jobs:
           target: ${{ matrix.target }}
       - name: Run credential-safety tests
         shell: bash
+        working-directory: codex-rs
         run: |
           set -euo pipefail
           cargo test --locked -p codex-core --lib turn_metadata_extracts_qintv_gateway_key_without_serializing_it
@@ -60,6 +61,7 @@ jobs:
           cargo test --locked -p codex-core --lib turn_scoped_responses_auth_replaces_the_provider_placeholder
       - name: Build codex
         shell: bash
+        working-directory: codex-rs
         run: cargo build --locked --release -p codex-cli --bin codex --target "${{ matrix.target }}"
       - name: Package runtime artifact
         shell: bash
