@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 set -euo pipefail
 
 : "${TARGET:?TARGET environment variable is required}"
@@ -32,64 +32,8 @@ case "${TARGET}" in
     ;;
 esac
 
-libcap_version="2.75"
-libcap_sha256="de4e7e064c9ba451d5234dd46e897d7c71c96a9ebf9a0c445bc04f4742d83632"
-libcap_tarball_name="libcap-${libcap_version}.tar.xz"
-libcap_download_url="https://mirrors.edge.kernel.org/pub/linux/libs/security/linux-privs/libcap2/${libcap_tarball_name}"
-
-# Use the musl toolchain as the Rust linker to avoid Zig injecting its own CRT.
-if command -v "${arch}-linux-musl-gcc" >/dev/null; then
-  musl_linker="$(command -v "${arch}-linux-musl-gcc")"
-elif command -v musl-gcc >/dev/null; then
-  musl_linker="$(command -v musl-gcc)"
-else
-  echo "musl gcc not found after install; arch=${arch}" >&2
-  exit 1
-fi
-
-OPENSSL_CC="${musl_linker}" bash "$(dirname "${BASH_SOURCE[0]}")/install-musl-openssl.sh"
-
-zig_target="${TARGET/-unknown-linux-musl/-linux-musl}"
-runner_temp="${RUNNER_TEMP:-/tmp}"
-tool_root="${runner_temp}/codex-musl-tools-${TARGET}"
-mkdir -p "${tool_root}"
-
-libcap_root="${tool_root}/libcap-${libcap_version}"
-libcap_src_root="${libcap_root}/src"
-libcap_prefix="${libcap_root}/prefix"
-libcap_pkgconfig_dir="${libcap_prefix}/lib/pkgconfig"
-
-if [[ ! -f "${libcap_prefix}/lib/libcap.a" ]]; then
-  mkdir -p "${libcap_src_root}" "${libcap_prefix}/lib" "${libcap_prefix}/include/sys" "${libcap_prefix}/include/linux" "${libcap_pkgconfig_dir}"
-  libcap_tarball="${libcap_root}/${libcap_tarball_name}"
-
-  curl -fsSL "${libcap_download_url}" -o "${libcap_tarball}"
-  echo "${libcap_sha256}  ${libcap_tarball}" | sha256sum -c -
-
-  tar -xJf "${libcap_tarball}" -C "${libcap_src_root}"
-  libcap_source_dir="${libcap_src_root}/libcap-${libcap_version}"
-  make -C "${libcap_source_dir}/libcap" -j"$(nproc)" \
-    CC="${musl_linker}" \
-    AR=ar \
-    RANLIB=ranlib
-
-  cp "${libcap_source_dir}/libcap/libcap.a" "${libcap_prefix}/lib/libcap.a"
-  cp "${libcap_source_dir}/libcap/include/uapi/linux/capability.h" "${libcap_prefix}/include/linux/capability.h"
-  cp "${libcap_source_dir}/libcap/../libcap/include/sys/capability.h" "${libcap_prefix}/include/sys/capability.h"
-
-  cat > "${libcap_pkgconfig_dir}/libcap.pc" <<EOF
-prefix=${libcap_prefix}
-exec_prefix=\${prefix}
-libdir=\${prefix}/lib
-includedir=\${prefix}/include
-
-Name: libcap
-Description: Linux capabilities
-Version: ${libcap_version}
-Libs: -L\${libdir} -lcap
-Cflags: -I\${includedir}
-EOF
-fi
+libcap_pkgconfig_dir="/tmp/codex-empty-pkgconfig"
+mkdir -p ""
 
 sysroot=""
 if command -v zig >/dev/null; then
@@ -288,3 +232,4 @@ if [[ -n "${sysroot}" && "${sysroot}" != "/" ]]; then
   pkg_config_sysroot_var="${pkg_config_sysroot_var//-/_}"
   echo "${pkg_config_sysroot_var}=${sysroot}" >> "$GITHUB_ENV"
 fi
+
