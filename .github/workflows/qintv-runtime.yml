@@ -49,6 +49,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.99.1
         with:
           targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: codex-rs -> target
+          key: ${{ matrix.target }}
       - name: Install Zig
         if: contains(matrix.target, 'linux')
         uses: mlugg/setup-zig@v2
@@ -95,8 +99,8 @@ jobs:
           fi
           sha256="$(sha256sum dist/codex | awk '{print $1}')"
           bytes="$(stat -c %s dist/codex 2>/dev/null || stat -f %z dist/codex)"
-          echo "SHA256=${sha256}" >> "$GITHUB_ENV"
-          echo "BYTES=${bytes}" >> "$GITHUB_ENV"
+          export SHA256="${sha256}"
+          export BYTES="${bytes}"
           printf '%s\n' "${sha256}" > dist/codex.sha256
           printf '%s\n' "${GITHUB_SHA}" > dist/codex-runtime.sha
           python3 - <<'PY'
