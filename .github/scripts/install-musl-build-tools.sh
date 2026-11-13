@@ -32,6 +32,18 @@ case "${TARGET}" in
     ;;
 esac
 
+# Use the musl toolchain as the Rust linker to avoid Zig injecting its own CRT.
+if command -v "${arch}-linux-musl-gcc" >/dev/null; then
+  musl_linker="$(command -v "${arch}-linux-musl-gcc")"
+elif command -v musl-gcc >/dev/null; then
+  musl_linker="$(command -v musl-gcc)"
+else
+  echo "musl gcc not found after install; arch=${arch}" >&2
+  exit 1
+fi
+
+OPENSSL_CC="${musl_linker}" bash "$(dirname "${BASH_SOURCE[0]}")/install-musl-openssl.sh"
+
 libcap_pkgconfig_dir="/tmp/codex-empty-pkgconfig"
 mkdir -p "${libcap_pkgconfig_dir}"
 
