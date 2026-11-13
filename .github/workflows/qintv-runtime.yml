@@ -72,6 +72,11 @@ jobs:
       - name: Build codex
         shell: bash
         working-directory: codex-rs
+        env:
+          CARGO_BUILD_JOBS: "2"
+          CARGO_PROFILE_RELEASE_LTO: "false"
+          CARGO_PROFILE_RELEASE_DEBUG: "false"
+          CARGO_PROFILE_RELEASE_STRIP: "symbols"
         run: cargo build --locked --release -p codex-cli --bin codex --target "${{ matrix.target }}"
       - name: Package runtime artifact
         shell: bash
