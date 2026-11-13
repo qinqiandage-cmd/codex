@@ -46,10 +46,10 @@ pub(crate) const HISTORY_INGEST_REQUESTED_KEY: &str = "history_ingest_requested"
 pub(crate) const ANALYTICS_ENABLED_KEY: &str = "analytics_enabled";
 pub(crate) const HISTORY_INITIALIZATION_KEY: &str = "history_initialization";
 pub(crate) const MCP_ATTRIBUTION_CLIENT_METADATA_KEY: &str = "mcp_attribution";
-pub(crate) const DRAMACLAW_GATEWAY_API_KEY: &str = "dramaclaw_gateway_api_key";
-pub(crate) const DRAMACLAW_CONTROL_CONTEXT_CAPABILITY: &str =
-    "dramaclaw_control_context_capability";
-pub(crate) const X_DRAMACLAW_CONTROL_CAPABILITY_HEADER: &str = "x-dramaclaw-control-capability";
+pub(crate) const QINTV_GATEWAY_API_KEY: &str = "qintv_gateway_api_key";
+pub(crate) const QINTV_CONTROL_CONTEXT_CAPABILITY: &str =
+    "qintv_control_context_capability";
+pub(crate) const X_QINTV_CONTROL_CAPABILITY_HEADER: &str = "x-qintv-control-capability";
 pub(crate) const MAX_MCP_ATTRIBUTION_BYTES: usize = 16 * 1024;
 
 pub(crate) const FORKED_FROM_THREAD_ID_KEY: &str = "forked_from_thread_id";
@@ -421,7 +421,7 @@ impl CodexResponsesMetadata {
         if let Some(capability) = &self.per_turn_control_capability {
             insert_header(
                 &mut headers,
-                X_DRAMACLAW_CONTROL_CAPABILITY_HEADER,
+                X_QINTV_CONTROL_CAPABILITY_HEADER,
                 capability,
             );
         }

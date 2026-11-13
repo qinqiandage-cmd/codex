@@ -209,11 +209,11 @@ mod tests {
         let patched = "test-patched-token";
         let request = TurnInputRequest::user_input(Vec::new())
             .with_responses_metadata(Some(HashMap::from([(
-                "dramaclaw_gateway_api_key".to_string(),
+                "qintv_gateway_api_key".to_string(),
                 secret.to_string(),
             )])))
             .with_responses_metadata_patch(Some(HashMap::from([(
-                "dramaclaw_gateway_api_key".to_string(),
+                "qintv_gateway_api_key".to_string(),
                 patched.to_string(),
             )])));
 

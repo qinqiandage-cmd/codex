@@ -6,8 +6,8 @@ use crate::responses_metadata::CONTEXT_WINDOW_ID_KEY;
 use crate::responses_metadata::CodexResponsesMetadata;
 use crate::responses_metadata::CodexResponsesRequestKind;
 use crate::responses_metadata::CompactionTurnMetadata;
-use crate::responses_metadata::DRAMACLAW_CONTROL_CONTEXT_CAPABILITY;
-use crate::responses_metadata::DRAMACLAW_GATEWAY_API_KEY;
+use crate::responses_metadata::QINTV_CONTROL_CONTEXT_CAPABILITY;
+use crate::responses_metadata::QINTV_GATEWAY_API_KEY;
 use crate::responses_metadata::FORKED_FROM_ORDINAL_EXCLUSIVE_KEY;
 use crate::responses_metadata::INSTALLATION_ID_KEY;
 use crate::responses_metadata::LEGACY_CODE_MODE_TOOL_NAMES_KEY;
@@ -666,7 +666,7 @@ fn turn_metadata_state_marks_user_input_requested_during_turn_only_for_mcp_reque
 }
 
 #[test]
-fn turn_metadata_extracts_dramaclaw_gateway_key_without_serializing_it() {
+fn turn_metadata_extracts_qintv_gateway_key_without_serializing_it() {
     let temp_dir = TempDir::new().expect("temp dir");
     let cwd = temp_dir.path().abs();
     let permission_profile = PermissionProfile::read_only();
@@ -688,14 +688,14 @@ fn turn_metadata_extracts_dramaclaw_gateway_key_without_serializing_it() {
     state.update_responsesapi_client_metadata(ResponsesApiClientMetadataUpdate {
         replacement: Some(HashMap::from([
             (
-                DRAMACLAW_GATEWAY_API_KEY.to_string(),
+                QINTV_GATEWAY_API_KEY.to_string(),
                 "stale-secret".to_string(),
             ),
             (
-                DRAMACLAW_CONTROL_CONTEXT_CAPABILITY.to_string(),
+                QINTV_CONTROL_CONTEXT_CAPABILITY.to_string(),
                 "t1.capability".to_string(),
             ),
-            ("origin".to_string(), "dramaclaw".to_string()),
+            ("origin".to_string(), "qintv".to_string()),
         ])),
         patch: None,
     });
@@ -703,7 +703,7 @@ fn turn_metadata_extracts_dramaclaw_gateway_key_without_serializing_it() {
     state.update_responsesapi_client_metadata(ResponsesApiClientMetadataUpdate {
         replacement: None,
         patch: Some(HashMap::from([(
-            DRAMACLAW_GATEWAY_API_KEY.to_string(),
+            QINTV_GATEWAY_API_KEY.to_string(),
             "turn-secret".to_string(),
         )])),
     });
@@ -720,10 +720,10 @@ fn turn_metadata_extracts_dramaclaw_gateway_key_without_serializing_it() {
 
     assert_eq!(metadata.per_turn_bearer_token(), Some("turn-secret"));
     for rendered in [&serialized, &client_metadata, &mcp_metadata] {
-        assert!(!rendered.contains(DRAMACLAW_GATEWAY_API_KEY));
+        assert!(!rendered.contains(QINTV_GATEWAY_API_KEY));
         assert!(!rendered.contains("turn-secret"));
         assert!(!rendered.contains("stale-secret"));
-        assert!(!rendered.contains(DRAMACLAW_CONTROL_CONTEXT_CAPABILITY));
+        assert!(!rendered.contains(QINTV_CONTROL_CONTEXT_CAPABILITY));
         assert!(!rendered.contains("t1.capability"));
     }
     assert!(
@@ -734,11 +734,11 @@ fn turn_metadata_extracts_dramaclaw_gateway_key_without_serializing_it() {
     );
     assert_eq!(
         headers
-            .get("x-dramaclaw-control-capability")
+            .get("x-qintv-control-capability")
             .and_then(|value| value.to_str().ok()),
         Some("t1.capability")
     );
-    assert!(serialized.contains("dramaclaw"));
+    assert!(serialized.contains("qintv"));
 }
 
 #[test]

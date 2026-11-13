@@ -15,8 +15,8 @@ use tokio_util::task::AbortOnDropHandle;
 use crate::responses_metadata::AGENT_NAME_KEY;
 use crate::responses_metadata::CodexResponsesMetadata;
 use crate::responses_metadata::CodexResponsesRequestKind;
-use crate::responses_metadata::DRAMACLAW_CONTROL_CONTEXT_CAPABILITY;
-use crate::responses_metadata::DRAMACLAW_GATEWAY_API_KEY;
+use crate::responses_metadata::QINTV_CONTROL_CONTEXT_CAPABILITY;
+use crate::responses_metadata::QINTV_GATEWAY_API_KEY;
 use crate::responses_metadata::MAX_EXTRA_METADATA_VALUE_BYTES;
 use crate::responses_metadata::PARENT_TURN_ID_KEY;
 use crate::responses_metadata::ROOT_TURN_ID_KEY;
@@ -489,8 +489,8 @@ impl TurnMetadataState {
         // it out of client_metadata, the x-codex-turn-metadata header and MCP
         // request metadata so a gateway key is never forwarded as observable
         // metadata.
-        let per_turn_bearer_token = extra.remove(DRAMACLAW_GATEWAY_API_KEY);
-        let per_turn_control_capability = extra.remove(DRAMACLAW_CONTROL_CONTEXT_CAPABILITY);
+        let per_turn_bearer_token = extra.remove(QINTV_GATEWAY_API_KEY);
+        let per_turn_control_capability = extra.remove(QINTV_CONTROL_CONTEXT_CAPABILITY);
         let mut metadata = CodexResponsesMetadata {
             parent_response_id,
             turn_id: Some(self.turn_id.clone()),

@@ -1,0 +1,110 @@
+name: qintv-runtime
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CODEX_VERSION: "0.164.0"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+          - runner: macos-14
+            target: aarch64-apple-darwin
+          - runner: macos-14
+            target: x86_64-apple-darwin
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.99.1
+        with:
+          targets: ${{ matrix.target }}
+      - name: Install Zig
+        if: contains(matrix.target, 'linux')
+        uses: mlugg/setup-zig@v2
+      - name: Install musl build tools
+        if: contains(matrix.target, 'linux')
+        env:
+          TARGET: ${{ matrix.target }}
+        run: bash "${GITHUB_WORKSPACE}/.github/scripts/install-musl-build-tools.sh"
+      - name: Disable aws-lc jitter entropy
+        if: contains(matrix.target, 'linux')
+        shell: bash
+        run: |
+          echo "AWS_LC_SYS_NO_JITTER_ENTROPY=1" >> "$GITHUB_ENV"
+          target_no_jitter="AWS_LC_SYS_NO_JITTER_ENTROPY_${{ matrix.target }}"
+          target_no_jitter="${target_no_jitter//-/_}"
+          echo "${target_no_jitter}=1" >> "$GITHUB_ENV"
+      - name: Setup rusty_v8
+        uses: ./.github/actions/setup-rusty-v8
+        with:
+          target: ${{ matrix.target }}
+      - name: Run credential-safety tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked -p codex-core --lib turn_metadata_extracts_qintv_gateway_key_without_serializing_it
+          cargo test --locked -p codex-core --lib debug_redacts_responses_api_client_metadata_values
+          cargo test --locked -p codex-core --lib turn_scoped_responses_auth_replaces_the_provider_placeholder
+      - name: Build codex
+        shell: bash
+        run: cargo build --locked --release -p codex-cli --bin codex --target "${{ matrix.target }}"
+      - name: Package runtime artifact
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          release_dir="codex-rs/target/${TARGET}/release"
+          binary="${release_dir}/codex"
+          test -f "$binary"
+          mkdir -p dist
+          cp "$binary" dist/codex
+          chmod 0755 dist/codex
+          if [[ "$TARGET" == *apple-darwin* ]]; then
+            codesign --force --sign - dist/codex
+          fi
+          sha256="$(sha256sum dist/codex | awk '{print $1}')"
+          bytes="$(stat -c %s dist/codex 2>/dev/null || stat -f %z dist/codex)"
+          echo "SHA256=${sha256}" >> "$GITHUB_ENV"
+          echo "BYTES=${bytes}" >> "$GITHUB_ENV"
+          printf '%s\n' "${sha256}" > dist/codex.sha256
+          printf '%s\n' "${GITHUB_SHA}" > dist/codex-runtime.sha
+          python3 - <<'PY'
+          import json
+          import os
+
+          payload = {
+              "repo": "https://github.com/" + os.environ["GITHUB_REPOSITORY"],
+              "commit": os.environ["GITHUB_SHA"],
+              "upstream_version": os.environ["CODEX_VERSION"],
+              "target": os.environ["TARGET"],
+              "bytes": int(os.environ["BYTES"]),
+              "sha256": os.environ["SHA256"],
+              "tests": [
+                  "debug_redacts_responses_api_client_metadata_values",
+                  "turn_scoped_responses_auth_replaces_the_provider_placeholder",
+                  "turn_metadata_extracts_qintv_gateway_key_without_serializing_it",
+              ],
+          }
+          with open("dist/codex-runtime.json", "w", encoding="utf-8") as handle:
+              json.dump(payload, handle, indent=2)
+              handle.write("\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codex-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error

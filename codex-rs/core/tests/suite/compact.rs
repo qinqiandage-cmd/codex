@@ -5257,7 +5257,7 @@ async fn run_mid_turn_compaction_turn(
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn dramaclaw_turn_key_authorizes_turn_and_compaction_requests() {
+async fn qintv_turn_key_authorizes_turn_and_compaction_requests() {
     skip_if_no_network!();
 
     let server = start_mock_server().await;
@@ -5266,14 +5266,14 @@ async fn dramaclaw_turn_key_authorizes_turn_and_compaction_requests() {
         non_openai_model_provider(&server),
         Some(std::collections::HashMap::from([
             (
-                "dramaclaw_gateway_api_key".to_string(),
+                "qintv_gateway_api_key".to_string(),
                 "turn-secret".to_string(),
             ),
             (
-                "dramaclaw_control_context_capability".to_string(),
+                "qintv_control_context_capability".to_string(),
                 "t1.capability".to_string(),
             ),
-            ("origin".to_string(), "dramaclaw".to_string()),
+            ("origin".to_string(), "qintv".to_string()),
         ])),
     )
     .await;
@@ -5284,7 +5284,7 @@ async fn dramaclaw_turn_key_authorizes_turn_and_compaction_requests() {
             Some("Bearer turn-secret")
         );
         assert_eq!(
-            request.header("x-dramaclaw-control-capability").as_deref(),
+            request.header("x-qintv-control-capability").as_deref(),
             Some("t1.capability")
         );
         let turn_metadata_header = request
@@ -5293,17 +5293,17 @@ async fn dramaclaw_turn_key_authorizes_turn_and_compaction_requests() {
         let body = request.body_json().to_string();
         for observable in [&turn_metadata_header, &body] {
             assert!(!observable.contains("turn-secret"));
-            assert!(!observable.contains("dramaclaw_gateway_api_key"));
+            assert!(!observable.contains("qintv_gateway_api_key"));
             assert!(!observable.contains("t1.capability"));
-            assert!(!observable.contains("dramaclaw_control_context_capability"));
+            assert!(!observable.contains("qintv_control_context_capability"));
         }
-        assert!(turn_metadata_header.contains("dramaclaw"));
+        assert!(turn_metadata_header.contains("qintv"));
     }
 }
 
 #[cfg(unix)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn turn_without_dramaclaw_key_keeps_refreshing_provider_command_auth() {
+async fn turn_without_qintv_key_keeps_refreshing_provider_command_auth() {
     skip_if_no_network!();
 
     let server = start_mock_server().await;
@@ -5346,7 +5346,7 @@ async fn turn_without_dramaclaw_key_keeps_refreshing_provider_command_auth() {
                 .expect("bearer authorization")
                 .to_string();
             assert!(tokens.contains(&token), "unexpected token {token}");
-            assert_eq!(request.header("x-dramaclaw-control-capability"), None);
+            assert_eq!(request.header("x-qintv-control-capability"), None);
             token
         })
         .collect();

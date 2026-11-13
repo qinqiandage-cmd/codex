@@ -3095,7 +3095,7 @@ async fn stream_until_complete_with_metadata(
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn responses_websocket_reconnects_when_dramaclaw_turn_key_changes() -> anyhow::Result<()> {
+async fn responses_websocket_reconnects_when_qintv_turn_key_changes() -> anyhow::Result<()> {
     skip_if_no_network!(Ok(()));
 
     let warmup = vec![ev_response_created("warmup"), ev_completed("warmup")];
@@ -3111,7 +3111,7 @@ async fn responses_websocket_reconnects_when_dramaclaw_turn_key_changes() -> any
                     text_elements: Vec::new(),
                 }])
                 .with_responses_metadata(Some(std::collections::HashMap::from(
-                    [("dramaclaw_gateway_api_key".to_string(), key.to_string())],
+                    [("qintv_gateway_api_key".to_string(), key.to_string())],
                 ))),
             )
             .await?;
@@ -3140,7 +3140,7 @@ async fn responses_websocket_reconnects_when_dramaclaw_turn_key_changes() -> any
             connection
                 .iter()
                 .map(|request| request.body_json().to_string())
-                .inspect(|body| assert!(!body.contains("dramaclaw_gateway_api_key")))
+                .inspect(|body| assert!(!body.contains("qintv_gateway_api_key")))
                 .filter_map(|body| {
                     ["turn with key-a", "turn with key-b"]
                         .into_iter()
