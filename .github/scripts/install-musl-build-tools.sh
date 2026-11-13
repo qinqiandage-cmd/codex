@@ -35,6 +35,11 @@ esac
 libcap_pkgconfig_dir="/tmp/codex-empty-pkgconfig"
 mkdir -p "${libcap_pkgconfig_dir}"
 
+zig_target="${TARGET/-unknown-linux-musl/-linux-musl}"
+runner_temp="${RUNNER_TEMP:-/tmp}"
+tool_root="${runner_temp}/codex-musl-tools-${TARGET}"
+mkdir -p "${tool_root}"
+
 sysroot=""
 if command -v zig >/dev/null; then
   zig_bin="$(command -v zig)"
